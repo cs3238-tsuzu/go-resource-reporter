@@ -11,17 +11,25 @@ import "net/http"
 import "net/url"
 
 func main() {
-	if len(os.Args) < 2 {
+	if len(os.Args) < 3 {
 		exe := os.Args[0]
 
-		fmt.Println(exe, " [identify code]")
+		fmt.Println(exe, " [identify code] [url]")
 
 		os.Exit(0)
 
 		return
 	}
 
-    for {
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", os.Args[2], nil)
+	if err != nil {
+		fmt.Println("error: ", err)
+		return
+	}
+	req.Header.Add("Rr-Identity", os.Args[1])
+
+	for {
 		// Memory
 		vms, err := mem.VirtualMemory()
 		var memStr string
@@ -85,17 +93,10 @@ func main() {
 		values.Add("cpu_name", cpuName)
 		values.Add("host", hostStr)
 		values.Add("conn", fmt.Sprint(connCount))
-        
-        client := &http.Client{}
-        req, err := http.NewRequest("GET", "http://azure.wt6.pw:34567/", nil)
-        if err != nil {
-            fmt.Println("error: ", err)
-            return
-        }
-        req.URL.RawQuery = values.Encode()
-        req.Header.Add("RR-Identify", os.Args[1])
-        
-        _, err = client.Do(req)
+
+		req.URL.RawQuery = values.Encode()
+
+		_, err = client.Do(req)
 
 		if err != nil {
 			fmt.Println("error: ", err)
